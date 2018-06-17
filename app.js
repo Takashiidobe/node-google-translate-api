@@ -4,46 +4,43 @@ const ejs = require('ejs');
 const bodyParser = require('body-parser');
 const googleTranslate = require('google-translate-api');
 
+//for heroku, either run on the port heroku wants or port 3000
+const port = process.env.PORT || 3000;
+
 //sets up body parser middleware
 app.use(bodyParser.urlencoded({ extended: true }));
-
 
 //sets up the template engine
 app.set('view engine', 'ejs');
 
-//sets up the first route/default 
+//sets up the first route/default, sets translatedOutput to nothing for now
 app.get('/', (req, res) => {
-  res.render('home');
+  res.render('home', {
+    translatedOutput: ''
+  });
 });
 
-app.get('/translate', (req, res) => {
-  res.render('translate');
-})
-
-
-//grab the variables from the view
-app.get('/translate', (req, res) => {
-  const translatedInput = req.body.translate;
+//after post request is submitted by the form this happens
+app.post('/', (req, res) => {
+  //grabs the input from the form
+  const translateInput = req.body.translate;
+  //grabs the desired language to switch to
   const targetLang = req.body.targetLang;
-  console.log(translatedInput, targetLang);
-  console.log(translatedOutput);
-  next()
-  googleTranslate(`${translatedInput}`, {to: `${targetLang}`})
-  .then(response => {
-  res.render('translate', {
-    translatedOutput: response.text
-  })
-  }).catch((err) => console.error(err));
-})
 
-//sets up the about page
-app.get('/about', (req, res) => {
-  res.render('about');
+  //runs the google translate function to change language
+  googleTranslate(`${translateInput}`, {to: `${targetLang}`})
+  .then(response => {
+    //afterwards it sets the translatedOutput to the response text
+    res.render('home', {
+      translatedOutput: response.text
+    })
+    //if we have an error, just let us know
+  }).catch((err) => console.error(err))
 });
 
-//sets up the port
-app.listen(3000, () => {
-  console.log('app working on port 3000');
+//listens on the port that the host wants or 3000
+app.listen(port, () => {
+  console.log(`app working on port ${port}`);
 });
 
 
